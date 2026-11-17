@@ -966,7 +966,7 @@ function showStoredResult(){
 }
 $("btnStart").addEventListener("click",()=>{
   if(hasPlayed()){
-    toast("لكل جهاز محاولة واحدة فقط");
+    toast("لكل شخص محاولة واحدة فقط");
     if(!showStoredResult())openBoard();
     return;
   }
@@ -980,7 +980,7 @@ $("btnStart").addEventListener("click",()=>{
 $("btnLeaderHome").addEventListener("click",openBoard);
 $("btnBoard").addEventListener("click",openBoard);
 $("btnPlayFromLb").addEventListener("click",()=>{
-  if(hasPlayed()){toast("لكل جهاز محاولة واحدة فقط");if(!showStoredResult())show("scr-home");return;}
+  if(hasPlayed()){toast("لكل شخص محاولة واحدة فقط");if(!showStoredResult())show("scr-home");return;}
   show("scr-home");
 });
 $("btnHomeFromLb").addEventListener("click",()=>show("scr-home"));
