@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // لعبة رحلة الانضباط: الجميع يقرأ اللوحة ويسجّل نتيجته، ولا أحد يعدّل أو يحذف من الصفحة
+    match /discipline_scores/{id} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['name','score','title','ts'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 40
+        && request.resource.data.score is int
+        && request.resource.data.score >= 0 && request.resource.data.score <= 1000
+        && request.resource.data.title is string && request.resource.data.title.size() <= 40
+        && request.resource.data.ts is int;
+      allow update, delete: if false;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>رحلة الانضباط — قيم نعيشها</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<style>
+:root{
+  --navy-deep:#1A2B4C;
+  --navy:#E7EDF8;
+  --navy-card:#FFFFFF;
+  --navy-line:#D9E2F2;
+  --gold:#E8B64C;
+  --gold-soft:#F2CE7B;
+  --gold-dim:#C9952F;
+  --ivory:#22324F;
+  --mist:#6B7A99;
+  --green:#1F9D5B;
+  --red:#D84F4F;
+  --r-md:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:'Alexandria',sans-serif;
+  background:
+    radial-gradient(900px 500px at 85% -5%, rgba(232,182,76,.20) 0%, transparent 55%),
+    radial-gradient(1100px 600px at 10% -10%, rgba(47,94,171,.14) 0%, transparent 60%),
+    #F4F7FD;
+  color:var(--ivory);
+  min-height:100dvh;
+  overflow-x:hidden;
+  line-height:1.7;
+}
+.app{max-width:470px;margin:0 auto;padding:18px 18px 40px;min-height:100dvh;display:flex;flex-direction:column}
+.screen{display:none;flex:1;flex-direction:column;animation:screenIn .45s cubic-bezier(.2,.8,.3,1)}
+.screen.active{display:flex}
+@keyframes screenIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+
+/* ---------- icons ---------- */
+.ic-svg{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vertical-align:-0.12em}
+
+/* ---------- shared bits ---------- */
+.btn{
+  display:block;width:100%;border:none;cursor:pointer;
+  font-family:inherit;font-size:1.05rem;font-weight:700;
+  padding:16px 20px;border-radius:var(--r-md);
+  background:linear-gradient(180deg,var(--gold-soft),var(--gold));
+  color:#1A2238;transition:transform .12s ease,box-shadow .12s ease;
+  box-shadow:0 6px 22px rgba(233,184,76,.28);
+}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible,.ghost:focus-visible,input:focus-visible{outline:3px solid var(--gold-soft);outline-offset:2px}
+.btn[disabled]{opacity:.45;box-shadow:none;cursor:default}
+.ghost{
+  display:block;width:100%;cursor:pointer;font-family:inherit;
+  font-size:.92rem;font-weight:600;padding:13px 18px;border-radius:var(--r-md);
+  background:transparent;border:1.5px solid var(--navy-line);color:var(--mist);
+  transition:border-color .15s,color .15s;
+}
+.ghost:active{border-color:var(--gold-dim);color:var(--gold-soft)}
+.stack{display:flex;flex-direction:column;gap:12px}
+.spacer{flex:1}
+.rule{display:flex;align-items:center;gap:12px;margin:14px 0 4px;color:var(--gold-dim)}
+.rule::before,.rule::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--navy-line))}
+.rule::after{background:linear-gradient(90deg,var(--navy-line),transparent)}
+
+/* ---------- home ---------- */
+.brand{text-align:center;margin-top:8px}
+.brand .prog{font-size:.78rem;color:var(--mist);letter-spacing:.02em}
+.brand h1{font-size:2.15rem;font-weight:900;color:var(--ivory);line-height:1.35;margin-top:2px}
+.brand h1 span{color:var(--gold)}
+.brand .sub{font-size:.85rem;color:var(--mist);margin-top:4px}
+
+.dial-wrap{position:relative;width:min(300px,72vw);margin:26px auto 10px}
+.dial-wrap svg{width:100%;height:auto;display:block}
+.dial-caption{text-align:center;font-size:.8rem;color:var(--mist);margin-top:10px}
+.dial-caption b{color:var(--gold-soft);font-weight:600}
+
+.value-strip{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:18px 0 22px}
+.value-strip span{
+  font-size:.74rem;color:var(--gold-soft);border:1px solid var(--navy-line);
+  background:rgba(233,184,76,.06);padding:5px 12px;border-radius:999px;
+}
+
+.name-row{display:flex;gap:10px;margin-bottom:12px}
+.name-row input{
+  flex:1;font-family:inherit;font-size:1rem;color:var(--ivory);
+  background:var(--navy-card);border:1.5px solid var(--navy-line);
+  border-radius:var(--r-md);padding:14px 16px;
+}
+.name-row input::placeholder{color:#9AA7C4}
+
+/* ---------- stage header ---------- */
+.stage-head{text-align:center;margin:6px 0 4px}
+.stage-head .chip{
+  display:inline-block;font-size:.72rem;color:var(--navy-deep);background:var(--gold);
+  font-weight:700;padding:3px 14px;border-radius:999px;margin-bottom:8px;
+}
+.stage-head h2{font-size:1.45rem;font-weight:800}
+.stage-head p{font-size:.84rem;color:var(--mist);max-width:34ch;margin:4px auto 0}
+.dots{display:flex;justify-content:center;gap:7px;margin:14px 0 6px}
+.dots i{width:9px;height:9px;border-radius:50%;background:var(--navy-line);transition:background .3s}
+.dots i.on{background:var(--gold)}
+.hud{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:.82rem;color:var(--mist);margin:10px 2px 12px;
+}
+.hud b{color:var(--gold-soft);font-weight:700;font-size:1rem}
+
+/* ---------- game 1 clock ---------- */
+.g1-area{text-align:center}
+.g1-feedback{min-height:2.2em;font-size:1rem;font-weight:700;margin:8px 0 2px}
+.g1-feedback.good{color:var(--green)}
+.g1-feedback.mid{color:var(--gold-soft)}
+.g1-feedback.bad{color:var(--red)}
+
+/* ---------- game 2 priorities ---------- */
+.g2-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.task-card{
+  position:relative;cursor:pointer;border:1.5px solid var(--navy-line);
+  background:var(--navy-card);border-radius:var(--r-md);
+  padding:13px 12px;text-align:center;transition:transform .12s,border-color .15s,opacity .3s;
+  user-select:none;font-family:inherit;
+}
+.task-card .t-time{font-size:1.05rem;font-weight:800;color:var(--gold)}
+.task-card .t-name{font-size:.78rem;color:var(--ivory);margin-top:2px}
+.task-card:active{transform:scale(.96)}
+.task-card.done{opacity:.28;border-color:var(--green);pointer-events:none}
+.task-card.wrong{animation:shake .35s;border-color:var(--red)}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(5px)}75%{transform:translateX(-5px)}}
+
+/* ---------- game 3 simon ---------- */
+.g3-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+.simon{
+  aspect-ratio:1.25;border-radius:var(--r-md);border:1.5px solid var(--navy-line);
+  background:var(--navy-card);cursor:pointer;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:7px;user-select:none;
+  transition:transform .1s, background .12s, border-color .12s;
+  font-family:inherit;color:var(--gold-soft);
+}
+.simon .ic-svg{width:30px;height:30px}
+.simon .lb{font-size:.72rem;color:var(--mist)}
+.simon.lit{background:var(--gold);border-color:var(--gold-soft);color:#1A2238}
+.simon.lit .lb{color:#1A2238}
+.simon:active{transform:scale(.95)}
+.simon.locked{pointer-events:none}
+.g3-status{text-align:center;font-size:.9rem;color:var(--mist);min-height:1.8em;margin-top:12px}
+.g3-status b{color:var(--gold-soft)}
+
+/* ---------- game 4 focus ---------- */
+.g4-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px}
+.hole{
+  aspect-ratio:1;border-radius:var(--r-md);background:var(--navy-card);
+  border:1.5px solid var(--navy-line);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;user-select:none;overflow:hidden;
+}
+.hole .pop{display:flex;flex-direction:column;align-items:center;gap:5px;animation:popIn .18s ease}
+.hole .pop .ic-svg{width:30px;height:30px}
+.hole .pop.good .ic-svg{color:var(--green)}
+.hole .pop.bad .ic-svg{color:var(--red)}
+.hole .pop .lb{font-size:.6rem;color:var(--mist)}
+@keyframes popIn{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+.hole.hit-good{background:rgba(91,201,139,.18);border-color:var(--green)}
+.hole.hit-bad{background:rgba(226,109,109,.2);border-color:var(--red)}
+
+/* ---------- interstitial ---------- */
+.inter{text-align:center;margin:auto 0;padding:30px 0}
+.inter .big{font-size:3.4rem;font-weight:900;color:var(--gold)}
+.inter .lbl{font-size:.95rem;color:var(--mist)}
+.inter .quote{font-size:.85rem;color:var(--gold-soft);margin-top:18px;max-width:30ch;margin-inline:auto}
+
+/* ---------- results ---------- */
+.res-head{text-align:center;margin-top:10px}
+.res-head .medal{width:92px;margin:0 auto}
+.res-head .medal svg{width:100%;height:auto;display:block}
+.res-head .title{font-size:1.6rem;font-weight:900;color:var(--gold);margin-top:6px}
+.res-head .score{font-size:3.2rem;font-weight:900;line-height:1.2}
+.res-head .outof{font-size:.8rem;color:var(--mist)}
+.bars{margin:20px 0 8px;display:flex;flex-direction:column;gap:11px}
+.bar-row{display:flex;align-items:center;gap:10px;font-size:.78rem}
+.bar-row .bl{width:92px;color:var(--mist)}
+.bar-row .track{flex:1;height:9px;border-radius:99px;background:var(--navy);overflow:hidden}
+.bar-row .fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--gold-dim),var(--gold));width:0;transition:width 1s cubic-bezier(.2,.8,.3,1)}
+.bar-row .bv{width:34px;text-align:left;color:var(--gold-soft);font-weight:700}
+
+/* ---------- leaderboard ---------- */
+.lb-list{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.lb-row{
+  display:flex;align-items:center;gap:12px;background:var(--navy-card);
+  border:1.5px solid var(--navy-line);border-radius:var(--r-md);padding:11px 14px;
+}
+.lb-row.me{border-color:var(--gold);background:rgba(233,184,76,.08)}
+.lb-rank{width:34px;height:34px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;color:var(--mist);flex-shrink:0}
+.lb-row:nth-child(1) .lb-rank{background:var(--gold);color:#1A2238}
+.lb-row:nth-child(2) .lb-rank{background:#C8CFDC;color:#1A2238}
+.lb-row:nth-child(3) .lb-rank{background:#C98E5B;color:#1A2238}
+.lb-name{flex:1;font-size:.92rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-score{font-weight:800;color:var(--gold-soft)}
+.lb-empty{text-align:center;color:var(--mist);font-size:.85rem;padding:30px 10px}
+.lb-note{text-align:center;font-size:.7rem;color:#93A2BE;margin-top:12px}
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--gold);color:#1A2238;font-weight:700;font-size:.85rem;
+  padding:11px 22px;border-radius:999px;transition:transform .35s cubic-bezier(.2,.8,.3,1);
+  z-index:50;box-shadow:0 8px 30px rgba(0,0,0,.4);max-width:88vw;text-align:center;
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.footer-note{text-align:center;font-size:.68rem;color:#93A2BE;margin-top:26px}
+/* ---------- light accents ---------- */
+.app{position:relative;z-index:1}
+body::before{content:"";position:fixed;inset:0;background-image:radial-gradient(rgba(26,43,76,.07) 1.1px,transparent 1.1px);background-size:24px 24px;pointer-events:none}
+.task-card,.simon,.hole,.lb-row,.name-row input{box-shadow:0 2px 12px rgba(26,43,76,.07)}
+.dial-wrap svg{filter:drop-shadow(0 12px 26px rgba(26,43,76,.13))}
+.dial-caption b,.value-strip span,.hud b,.inter .quote,.bar-row .bv,.lb-score,.g3-status b,.brand h1 span,.res-head .title,.task-card .t-time{color:#A87D1F}
+.inter .big,.simon{color:#C9952F}
+.g1-feedback.mid{color:#B8892B}
+.toast{color:#2A3550}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ HOME ============ -->
+  <section class="screen active" id="scr-home">
+    <div class="brand">
+      <div class="prog">برنامج «قيم نعيشها» — أسبوع الانضباط</div>
+      <h1>رحلة <span>الانضباط</span></h1>
+      <div class="sub">أربعة تحديات في ثلاث دقائق — ومحاولة واحدة فقط، فاجعلها مثالية</div>
+    </div>
+
+    <div class="dial-wrap" aria-hidden="true">
+      <svg viewBox="0 0 200 200">
+        <defs>
+          <linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#F2CE7B"/><stop offset="1" stop-color="#C9952F"/>
+          </linearGradient>
+        </defs>
+        <circle cx="100" cy="100" r="92" fill="none" stroke="#EAD9AF" stroke-width="2.5"/>
+        <circle cx="100" cy="100" r="80" fill="#FFFFFF" stroke="#DCE4F2" stroke-width="1.5"/>
+        <g id="homeTicks"></g>
+        <g id="homeNeedle">
+          <line x1="100" y1="100" x2="100" y2="34" stroke="#C9952F" stroke-width="4" stroke-linecap="round"/>
+        </g>
+        <circle cx="100" cy="100" r="7" fill="#C9952F"/>
+        <circle cx="100" cy="100" r="2.6" fill="#FFFFFF"/>
+      </svg>
+    </div>
+    <div class="dial-caption">دقة والتزام وتنظيم — <b>كل ثانية لها قيمة</b></div>
+
+    <div class="value-strip">
+      <span>الالتزام بالمواعيد</span><span>تنظيم الوقت</span><span>احترام الأنظمة</span><span>استشعار المسؤولية</span>
+    </div>
+
+    <div class="spacer"></div>
+    <div class="name-row">
+      <input id="playerName" type="text" maxlength="30" placeholder="اسمك (كما سيظهر في لوحة الشرف)" autocomplete="name">
+    </div>
+    <div class="stack">
+      <button class="btn" id="btnStart">ابدأ الرحلة</button>
+      <button class="ghost" id="btnLeaderHome">لوحة الشرف</button>
+    </div>
+    <div class="footer-note">فريق التمكين المؤسسي — الإدارة العامة</div>
+  </section>
+
+  <!-- ============ GAME 1 ============ -->
+  <section class="screen" id="scr-g1">
+    <div class="stage-head">
+      <span class="chip">التحدي الأول</span>
+      <h2>ساعة الدقة</h2>
+      <p>الموظف المنضبط يصل في اللحظة تمامًا. أوقف العقرب على العلامة الذهبية بالضبط!</p>
+    </div>
+    <div class="dots"><i class="on"></i><i></i><i></i><i></i></div>
+    <div class="hud"><span>الجولة <b id="g1Round">1</b> / 3</span><span>نقاطك <b id="g1Score">0</b></span></div>
+
+    <div class="g1-area">
+      <div class="dial-wrap" style="margin-top:4px">
+        <svg viewBox="0 0 200 200" id="g1svg">
+          <circle cx="100" cy="100" r="92" fill="none" stroke="#EAD9AF" stroke-width="2.5"/>
+          <circle cx="100" cy="100" r="80" fill="#FFFFFF" stroke="#DCE4F2" stroke-width="1.5"/>
+          <g id="g1Ticks"></g>
+          <g id="g1Target"></g>
+          <g id="g1Needle">
+            <line x1="100" y1="100" x2="100" y2="32" stroke="#C9952F" stroke-width="4" stroke-linecap="round"/>
+          </g>
+          <defs>
+            <linearGradient id="gGold2" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#F2CE7B"/><stop offset="1" stop-color="#C9952F"/>
+            </linearGradient>
+          </defs>
+          <circle cx="100" cy="100" r="7" fill="#C9952F"/>
+          <circle cx="100" cy="100" r="2.6" fill="#FFFFFF"/>
+        </svg>
+      </div>
+      <div class="g1-feedback" id="g1Fb"></div>
+      <button class="btn" id="g1Stop">أوقف الآن!</button>
+    </div>
+    <div class="spacer"></div>
+  </section>
+
+  <!-- ============ GAME 2 ============ -->
+  <section class="screen" id="scr-g2">
+    <div class="stage-head">
+      <span class="chip">التحدي الثاني</span>
+      <h2>رتّب يومك</h2>
+      <p>يومٌ مزدحم تبعثرت مهامه! المسها بترتيبها الزمني الصحيح — بأسرع ما يمكن.</p>
+    </div>
+    <div class="dots"><i class="on"></i><i class="on"></i><i></i><i></i></div>
+    <div class="hud"><span>الوقت <b id="g2Time">45</b> ث</span><span>التسلسل <b id="g2Prog">0</b> / 8</span></div>
+    <div class="g2-grid" id="g2Grid"></div>
+    <div class="spacer"></div>
+  </section>
+
+  <!-- ============ GAME 3 ============ -->
+  <section class="screen" id="scr-g3">
+    <div class="stage-head">
+      <span class="chip">التحدي الثالث</span>
+      <h2>اتبع النظام</h2>
+      <p>الأنظمة تسلسل واضح. راقب الإيقاع ثم أعِده بنفس الترتيب — يزداد طولًا كل مرة.</p>
+    </div>
+    <div class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+    <div class="hud"><span>المستوى <b id="g3Level">1</b></span><span>نقاطك <b id="g3Score">0</b></span></div>
+    <div class="g3-grid" id="g3Grid"></div>
+    <div class="g3-status" id="g3Status">راقب الإيقاع…</div>
+    <div class="spacer"></div>
+  </section>
+
+  <!-- ============ GAME 4 ============ -->
+  <section class="screen" id="scr-g4">
+    <div class="stage-head">
+      <span class="chip">التحدي الأخير</span>
+      <h2>ركّز.. لا تنشغل</h2>
+      <p>المسؤولية تركيز. التقط الالتزامات <b style="color:var(--green)">الخضراء</b> وتجاهل المشتتات <b style="color:var(--red)">الحمراء</b>!</p>
+    </div>
+    <div class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
+    <div class="hud"><span>الوقت <b id="g4Time">25</b> ث</span><span>نقاطك <b id="g4Score">0</b></span></div>
+    <div class="g4-grid" id="g4Grid"></div>
+    <div class="spacer"></div>
+  </section>
+
+  <!-- ============ INTERSTITIAL ============ -->
+  <section class="screen" id="scr-inter">
+    <div class="inter">
+      <div class="lbl" id="interLbl">نقاط التحدي</div>
+      <div class="big" id="interPts">0</div>
+      <div class="quote" id="interQuote"></div>
+    </div>
+    <button class="btn" id="btnNext">التحدي التالي</button>
+  </section>
+
+  <!-- ============ RESULTS ============ -->
+  <section class="screen" id="scr-res">
+    <div class="res-head">
+      <div class="medal" id="resMedal"></div>
+      <div class="title" id="resTitle">سفير الانضباط</div>
+      <div class="score"><span id="resScore">0</span></div>
+      <div class="outof">من 1000 نقطة</div>
+    </div>
+    <div class="bars">
+      <div class="bar-row"><span class="bl">ساعة الدقة</span><div class="track"><div class="fill" id="b1"></div></div><span class="bv" id="v1">0</span></div>
+      <div class="bar-row"><span class="bl">رتّب يومك</span><div class="track"><div class="fill" id="b2"></div></div><span class="bv" id="v2">0</span></div>
+      <div class="bar-row"><span class="bl">اتبع النظام</span><div class="track"><div class="fill" id="b3"></div></div><span class="bv" id="v3">0</span></div>
+      <div class="bar-row"><span class="bl">التركيز</span><div class="track"><div class="fill" id="b4"></div></div><span class="bv" id="v4">0</span></div>
+    </div>
+    <div class="spacer"></div>
+    <div class="stack">
+      <button class="btn" id="btnBoard">لوحة الشرف</button>
+      <button class="ghost" id="btnShare">نسخ نتيجتي لمشاركتها</button>
+    </div>
+  </section>
+
+  <!-- ============ LEADERBOARD ============ -->
+  <section class="screen" id="scr-lb">
+    <div class="stage-head">
+      <span class="chip">أسبوع الانضباط</span>
+      <h2>لوحة الشرف</h2>
+      <p>أفضل نتيجة لكل زميل — نافسوا بروح واحدة</p>
+    </div>
+    <div class="lb-list" id="lbList"><div class="lb-empty">جارٍ التحميل…</div></div>
+    <div class="lb-note" id="lbNote"></div>
+    <div class="spacer"></div>
+    <div class="stack" style="margin-top:16px">
+      <button class="btn" id="btnPlayFromLb">العب الآن</button>
+      <button class="ghost" id="btnHomeFromLb">العودة للرئيسية</button>
+    </div>
+  </section>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ================= helpers ================= */
+const $=id=>document.getElementById(id);
+const screens=["scr-home","scr-g1","scr-g2","scr-g3","scr-g4","scr-inter","scr-res","scr-lb"];
+function show(id){screens.forEach(s=>$(s).classList.toggle("active",s===id));window.scrollTo(0,0);}
+function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("show"),2400);}
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+
+/* ================= line icon set (24x24 stroke) ================= */
+const ICONS={
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/>',
+  list:'<path d="M9 6.5h11M9 12h11M9 17.5h11"/><path d="M4 6.5h.01M4 12h.01M4 17.5h.01" stroke-width="2.6"/>',
+  users:'<circle cx="9" cy="8" r="3.4"/><path d="M3.2 19.5c.4-3.1 2.8-5.1 5.8-5.1s5.4 2 5.8 5.1"/><circle cx="17.3" cy="9.2" r="2.5"/><path d="M16.2 14.6c2.6.4 4.4 2.1 4.7 4.5"/>',
+  target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.6"/><path d="M12 12h.01" stroke-width="3"/>',
+  doc:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 13l2 2 4-4"/>',
+  book:'<path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H19v17.5H7.5A2.5 2.5 0 0 0 5 22z"/><path d="M5 19.5A2.5 2.5 0 0 1 7.5 17H19"/>',
+  alarm:'<circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.6"/><path d="M4.5 4.5L7 3M19.5 4.5L17 3"/>',
+  folder:'<path d="M3 7.5a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  pen:'<path d="M4 20l1.2-4.4L16.5 4.3a2.1 2.1 0 0 1 3 0l.2.2a2.1 2.1 0 0 1 0 3L8.4 18.8z"/><path d="M14.5 6.3l3.2 3.2"/>',
+  phone:'<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
+  cup:'<path d="M5 8h11v6.5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 9.5h1.6a2.6 2.6 0 0 1 0 5.2H16"/>',
+  chat:'<path d="M4 5h16v11h-9.5L5.5 20l.4-4H4z"/>',
+  moon:'<path d="M20 13.8A8.2 8.2 0 1 1 10.2 4a6.8 6.8 0 0 0 9.8 9.8z"/>'
+};
+function icon(name,cls){return `<svg class="ic-svg${cls?' '+cls:''}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]||''}</svg>`;}
+
+/* medal badge svg, colored per rank */
+function medalSVG(color,ribbon){
+  return `<svg viewBox="0 0 100 120" aria-hidden="true">
+    <path d="M34 4h12l-9 36h-14z" fill="${ribbon}" opacity=".85"/>
+    <path d="M66 4H54l9 36h14z" fill="${ribbon}"/>
+    <circle cx="50" cy="74" r="34" fill="#FFFFFF" stroke="${color}" stroke-width="3.5"/>
+    <circle cx="50" cy="74" r="26" fill="none" stroke="${color}" stroke-width="1.4" opacity=".55"/>
+    <path d="M50 56l5.3 10.8 11.9 1.7-8.6 8.4 2 11.8L50 83.1l-10.6 5.6 2-11.8-8.6-8.4 11.9-1.7z" fill="${color}"/>
+  </svg>`;
+}
+
+/* audio: tiny beeps */
+let AC=null;
+function beep(freq,dur=0.12,vol=0.15){
+  try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    const o=AC.createOscillator(),g=AC.createGain();
+    o.frequency.value=freq;o.type="sine";
+    g.gain.setValueAtTime(vol,AC.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+    o.connect(g).connect(AC.destination);o.start();o.stop(AC.currentTime+dur);
+  }catch(e){}
+}
+
+/* ================= state ================= */
+const state={name:"",scores:[0,0,0,0],stage:0};
+try{const n=localStorage.getItem("disc_name");if(n)state.name=n;}catch(e){}
+
+/* ================= Firebase (shared live scores) ================= */
+let fdb=null;
+try{
+  if(window.firebase&&window.FIREBASE_CONFIG){
+    firebase.initializeApp(window.FIREBASE_CONFIG);
+    fdb=firebase.firestore();
+  }
+}catch(e){fdb=null;}
+
+/* ================= clock drawing ================= */
+function drawTicks(groupId){
+  const g=$(groupId);if(!g||g.childElementCount)return;
+  let html="";
+  for(let i=0;i<60;i++){
+    const a=i*6*Math.PI/180,maj=i%5===0;
+    const r1=maj?68:73,r2=78;
+    const x1=100+r1*Math.sin(a),y1=100-r1*Math.cos(a);
+    const x2=100+r2*Math.sin(a),y2=100-r2*Math.cos(a);
+    html+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${maj?'#8FA3C8':'#D5DEEF'}" stroke-width="${maj?2.4:1.2}"/>`;
+  }
+  g.innerHTML=html;
+}
+drawTicks("homeTicks");drawTicks("g1Ticks");
+
+/* home needle idle sweep */
+let homeAng=0;
+(function homeSpin(){
+  homeAng=(homeAng+0.35)%360;
+  const n=$("homeNeedle");
+  if(n)n.setAttribute("transform",`rotate(${homeAng} 100 100)`);
+  requestAnimationFrame(homeSpin);
+})();
+
+/* ================= GAME 1 : precision clock ================= */
+const g1={round:0,score:0,ang:0,speed:0,target:0,raf:0,running:false};
+function g1Start(){
+  g1.round=0;g1.score=0;
+  $("g1Score").textContent=0;
+  show("scr-g1");g1NextRound();
+}
+function g1NextRound(){
+  g1.round++;
+  $("g1Round").textContent=g1.round;
+  $("g1Fb").textContent="";$("g1Fb").className="g1-feedback";
+  g1.target=Math.floor(rnd(0,12))*30;
+  g1.speed=[2.4,3.4,4.6][g1.round-1];
+  g1.ang=(g1.target+180)%360;
+  const tg=$("g1Target");
+  const a=g1.target*Math.PI/180;
+  const x=100+70*Math.sin(a),y=100-70*Math.cos(a);
+  tg.innerHTML=`<circle cx="${x}" cy="${y}" r="9" fill="none" stroke="#C9952F" stroke-width="2.5"/><circle cx="${x}" cy="${y}" r="3.4" fill="#C9952F"/>`;
+  g1.running=true;
+  $("g1Stop").disabled=false;
+  cancelAnimationFrame(g1.raf);
+  (function loop(){
+    if(!g1.running)return;
+    g1.ang=(g1.ang+g1.speed)%360;
+    $("g1Needle").setAttribute("transform",`rotate(${g1.ang} 100 100)`);
+    g1.raf=requestAnimationFrame(loop);
+  })();
+}
+$("g1Stop").addEventListener("click",()=>{
+  if(!g1.running)return;
+  g1.running=false;$("g1Stop").disabled=true;
+  let diff=Math.abs(g1.ang-g1.target)%360;if(diff>180)diff=360-diff;
+  let pts,msg,cls;
+  if(diff<=4){pts=85;msg="في اللحظة تمامًا! دقة استثنائية";cls="good";beep(880);}
+  else if(diff<=10){pts=70;msg="ممتاز! وصلت قبل الجرس بثوانٍ";cls="good";beep(720);}
+  else if(diff<=22){pts=50;msg="جيد.. لكن المنضبط لا يتأخر ثانية";cls="mid";beep(520);}
+  else if(diff<=45){pts=28;msg="تأخرت قليلًا عن الموعد!";cls="mid";beep(360);}
+  else{pts=10;msg="فاتك الموعد! حاول ضبط إيقاعك";cls="bad";beep(220,.2);}
+  g1.score+=pts;
+  $("g1Score").textContent=g1.score;
+  const fb=$("g1Fb");fb.textContent=msg+" +"+pts;fb.className="g1-feedback "+cls;
+  setTimeout(()=>{
+    if(g1.round<3)g1NextRound();
+    else finishStage(0,Math.min(250,Math.round(g1.score/255*250)),
+      "«الالتزام بالموعد أول رسائل الاحترام»");
+  },1300);
+});
+
+/* ================= GAME 2 : order your day ================= */
+const TASKS=[
+  ["7:00","توقيع الحضور"],["7:30","قراءة التعاميم"],["8:15","الاجتماع الصباحي"],
+  ["9:30","إنجاز المعاملات"],["10:30","الرد على الخطابات"],["11:30","متابعة المؤشرات"],
+  ["12:30","أرشفة الملفات"],["1:30","تقرير نهاية الدوام"]
+];
+const g2={idx:0,time:45,timer:0,mistakes:0};
+function g2Start(){
+  g2.idx=0;g2.time=45;g2.mistakes=0;
+  $("g2Prog").textContent=0;$("g2Time").textContent=g2.time;
+  const grid=$("g2Grid");grid.innerHTML="";
+  shuffle(TASKS.map((t,i)=>({t,i}))).forEach(({t,i})=>{
+    const d=document.createElement("button");
+    d.className="task-card";d.type="button";
+    d.innerHTML=`<div class="t-time">${t[0]}</div><div class="t-name">${t[1]}</div>`;
+    d.addEventListener("click",()=>g2Tap(d,i));
+    grid.appendChild(d);
+  });
+  show("scr-g2");
+  clearInterval(g2.timer);
+  g2.timer=setInterval(()=>{
+    g2.time--;$("g2Time").textContent=g2.time;
+    if(g2.time<=0)g2End();
+  },1000);
+}
+function g2Tap(el,i){
+  if(i===g2.idx){
+    el.classList.add("done");beep(600+g2.idx*60,.08);
+    g2.idx++;$("g2Prog").textContent=g2.idx;
+    if(g2.idx>=TASKS.length)g2End();
+  }else{
+    g2.mistakes++;beep(200,.15);
+    el.classList.remove("wrong");void el.offsetWidth;el.classList.add("wrong");
+  }
+}
+function g2End(){
+  clearInterval(g2.timer);
+  const base=g2.idx/TASKS.length*160;
+  const speed=g2.idx>=TASKS.length?Math.max(0,g2.time/45*90):0;
+  const pts=Math.max(0,Math.round(base+speed-g2.mistakes*8));
+  finishStage(1,Math.min(250,pts),"«من رتّب وقته.. اتسع يومه»");
+}
+
+/* ================= GAME 3 : simon ================= */
+const SIMON=[["clock","الحضور المبكر"],["list","اتباع التعليمات"],["users","احترام الزملاء"],["target","إنجاز المهام"]];
+const g3={seq:[],pos:0,level:0,score:0,locked:true};
+function g3Start(){
+  g3.seq=[];g3.level=0;g3.score=0;
+  $("g3Score").textContent=0;
+  const grid=$("g3Grid");grid.innerHTML="";
+  SIMON.forEach((s,i)=>{
+    const b=document.createElement("button");
+    b.className="simon locked";b.type="button";b.dataset.i=i;
+    b.innerHTML=`${icon(s[0])}<span class="lb">${s[1]}</span>`;
+    b.addEventListener("click",()=>g3Tap(i));
+    grid.appendChild(b);
+  });
+  show("scr-g3");
+  setTimeout(g3NextLevel,800);
+}
+function g3SetLock(l){document.querySelectorAll(".simon").forEach(b=>b.classList.toggle("locked",l));g3.locked=l;}
+function g3NextLevel(){
+  g3.level++;$("g3Level").textContent=g3.level;
+  g3.seq.push(Math.floor(rnd(0,4)));
+  g3.pos=0;g3SetLock(true);
+  $("g3Status").innerHTML="راقب الإيقاع… <b>مستوى "+g3.level+"</b>";
+  g3.seq.forEach((v,k)=>{
+    setTimeout(()=>{
+      const b=document.querySelector(`.simon[data-i="${v}"]`);
+      b.classList.add("lit");beep([440,550,660,770][v],.18);
+      setTimeout(()=>b.classList.remove("lit"),330);
+      if(k===g3.seq.length-1)setTimeout(()=>{
+        g3SetLock(false);$("g3Status").textContent="دورك — أعد التسلسل";
+      },450);
+    },k*560);
+  });
+}
+function g3Tap(i){
+  if(g3.locked)return;
+  const b=document.querySelector(`.simon[data-i="${i}"]`);
+  b.classList.add("lit");setTimeout(()=>b.classList.remove("lit"),200);
+  if(i===g3.seq[g3.pos]){
+    beep([440,550,660,770][i],.1);g3.pos++;
+    if(g3.pos>=g3.seq.length){
+      g3.score+=g3.level*12;
+      $("g3Score").textContent=g3.score;
+      g3SetLock(true);
+      if(g3.level>=6){g3End();return;}
+      $("g3Status").textContent="أحسنت! التسلسل القادم أطول…";
+      setTimeout(g3NextLevel,900);
+    }
+  }else{
+    beep(180,.3);g3SetLock(true);
+    $("g3Status").textContent="انكسر التسلسل!";
+    setTimeout(g3End,900);
+  }
+}
+function g3End(){
+  const pts=Math.min(250,Math.round(g3.score/252*250));
+  finishStage(2,pts,"«النظام إيقاع.. من أتقنه قاد العمل بسلاسة»");
+}
+
+/* ================= GAME 4 : focus ================= */
+const GOOD=[["doc","تسليم التقرير"],["book","تحضير الدرس"],["alarm","حضور مبكر"],["folder","أرشفة منظمة"],["pen","متابعة الطلاب"]];
+const BAD=[["phone","تصفح الجوال"],["cup","استراحة طويلة"],["chat","سوالف جانبية"],["moon","تأجيل المهام"]];
+const g4={score:0,time:25,timer:0,spawner:0};
+function g4Start(){
+  g4.score=0;g4.time=25;
+  $("g4Score").textContent=0;$("g4Time").textContent=g4.time;
+  const grid=$("g4Grid");grid.innerHTML="";
+  for(let i=0;i<9;i++){
+    const h=document.createElement("div");h.className="hole";h.dataset.i=i;
+    grid.appendChild(h);
+  }
+  show("scr-g4");
+  clearInterval(g4.timer);clearInterval(g4.spawner);
+  g4.timer=setInterval(()=>{
+    g4.time--;$("g4Time").textContent=g4.time;
+    if(g4.time<=0)g4End();
+  },1000);
+  g4.spawner=setInterval(g4Spawn,620);
+}
+function g4Spawn(){
+  const holes=[...document.querySelectorAll(".hole")].filter(h=>!h.firstChild);
+  if(!holes.length)return;
+  const h=holes[Math.floor(rnd(0,holes.length))];
+  const isGood=Math.random()<0.58;
+  const item=(isGood?GOOD:BAD)[Math.floor(rnd(0,(isGood?GOOD:BAD).length))];
+  const d=document.createElement("div");
+  d.className="pop "+(isGood?"good":"bad");
+  d.innerHTML=`${icon(item[0])}<span class="lb">${item[1]}</span>`;
+  h.appendChild(d);
+  const onTap=()=>{
+    if(!d.parentNode)return;
+    if(isGood){g4.score+=12;beep(700,.08);h.classList.add("hit-good");}
+    else{g4.score=Math.max(0,g4.score-15);beep(190,.15);h.classList.add("hit-bad");}
+    $("g4Score").textContent=g4.score;
+    d.remove();
+    setTimeout(()=>h.classList.remove("hit-good","hit-bad"),250);
+  };
+  h.onclick=onTap;
+  setTimeout(()=>{if(d.parentNode){d.remove();h.onclick=null;}},1050);
+}
+function g4End(){
+  clearInterval(g4.timer);clearInterval(g4.spawner);
+  const pts=Math.min(250,g4.score);
+  finishStage(3,pts,"«المسؤولية أن تبقى عينك على الهدف»");
+}
+
+/* ================= flow ================= */
+const QUOTES_NEXT=["التحدي التالي","التحدي التالي","التحدي الأخير","اعرض نتيجتي"];
+function finishStage(idx,pts,quote){
+  state.scores[idx]=pts;
+  if(idx<3){
+    $("interLbl").textContent="نقاط التحدي "+["الأول","الثاني","الثالث"][idx];
+    animNumber($("interPts"),pts);
+    $("interQuote").textContent=quote;
+    $("btnNext").textContent=QUOTES_NEXT[idx];
+    show("scr-inter");
+  }else{
+    showResults();
+  }
+}
+$("btnNext").addEventListener("click",()=>{
+  state.stage++;
+  [g1Start,g2Start,g3Start,g4Start][state.stage]();
+});
+function animNumber(el,to){
+  const t0=performance.now(),dur=800;
+  (function f(t){
+    const p=Math.min(1,(t-t0)/dur);
+    el.textContent=Math.round(to*(1-Math.pow(1-p,3)));
+    if(p<1)requestAnimationFrame(f);
+  })(t0);
+}
+
+/* rank: [title, medal color, ribbon color] */
+function rankOf(total){
+  if(total>=850)return["سفير الانضباط","#D9A62F","#B23A48"];
+  if(total>=680)return["قدوة الانضباط","#C9952F","#2F4F82"];
+  if(total>=480)return["ملتزم متميز","#9FB0CC","#2F4F82"];
+  if(total>=280)return["على طريق الانضباط","#B5784A","#2F4F82"];
+  return["بداية الرحلة","#8A99B8","#2F4F82"];
+}
+async function showResults(skipSave){
+  const total=state.scores.reduce((a,b)=>a+b,0);
+  const[title,mc,rc]=rankOf(total);
+  $("resMedal").innerHTML=medalSVG(mc,rc);
+  $("resTitle").textContent=title;
+  animNumber($("resScore"),total);
+  show("scr-res");
+  setTimeout(()=>{
+    state.scores.forEach((s,i)=>{
+      $("b"+(i+1)).style.width=(s/250*100)+"%";
+      $("v"+(i+1)).textContent=s;
+    });
+  },150);
+  if(!skipSave){
+    try{localStorage.setItem("disc_result",JSON.stringify({name:state.name,scores:state.scores}));}catch(e){}
+    saveScore(total,title);
+  }
+}
+
+/* ================= score saving ================= */
+function slugName(n){return n.trim().replace(/\s+/g,"_").replace(/[^؀-ۿa-zA-Z0-9_]/g,"").slice(0,24)||"player";}
+function localBoard(){
+  try{return JSON.parse(localStorage.getItem("disc_board")||"[]");}catch(e){return[];}
+}
+async function saveScore(total,title){
+  const entry={name:state.name,score:total,title,ts:Date.now()};
+  try{
+    const b=localBoard();
+    const i=b.findIndex(e=>e.name===state.name);
+    if(i>=0){if(total>b[i].score)b[i]=entry;}else b.push(entry);
+    localStorage.setItem("disc_board",JSON.stringify(b));
+  }catch(e){}
+  if(fdb){
+    try{
+      await fdb.collection("discipline_scores").add(entry);
+      toast("سُجلت نتيجتك في لوحة الشرف");
+    }catch(e){toast("انسخ نتيجتك وشاركها في مجموعة الفريق");}
+  }else{
+    toast("انسخ نتيجتك وشاركها في مجموعة الفريق");
+  }
+}
+
+/* ================= leaderboard ================= */
+/* اللوحة الرسمية المعتمدة — يحدّثها فريق التمكين المؤسسي
+   أضف سطرًا لكل زميل: {name:"الاسم",score:850,title:"سفير الانضباط"} */
+const OFFICIAL=[
+];
+let lbUnsub=null;
+function renderBoard(cloudRows,live){
+  const list=$("lbList"),note=$("lbNote");
+  let rows=[...OFFICIAL,...cloudRows];
+  localBoard().forEach(r=>rows.push(r));
+  const best={};
+  rows.forEach(r=>{if(r&&r.name&&(!best[r.name]||r.score>best[r.name].score))best[r.name]=r;});
+  rows=Object.values(best).sort((a,b)=>b.score-a.score);
+  if(!rows.length){
+    list.innerHTML='<div class="lb-empty">كن أول من يسجّل اسمه في لوحة الشرف</div>';
+  }else{
+    list.innerHTML="";
+    rows.slice(0,30).forEach((r,i)=>{
+      const d=document.createElement("div");
+      d.className="lb-row"+(r.name===state.name?" me":"");
+      d.innerHTML=`<span class="lb-rank">${i+1}</span><span class="lb-name">${esc(r.name)}<div style="font-size:.68rem;color:var(--mist);font-weight:400">${esc(r.title||"")}</div></span><span class="lb-score">${r.score}</span>`;
+      list.appendChild(d);
+    });
+  }
+  note.textContent=live?"لوحة مشتركة حية — تتحدّث تلقائيًا مع كل نتيجة جديدة":"انسخ نتيجتك وشاركها في مجموعة الفريق";
+}
+async function openBoard(){
+  show("scr-lb");
+  $("lbList").innerHTML='<div class="lb-empty">جارٍ التحميل…</div>';
+  if(fdb){
+    if(lbUnsub){try{lbUnsub();}catch(e){}}
+    lbUnsub=fdb.collection("discipline_scores").orderBy("score","desc").limit(100)
+      .onSnapshot(snap=>{
+        const r=[];
+        snap.forEach(d=>{
+          const v=d.data();
+          if(v&&v.name)r.push({name:String(v.name).slice(0,40),score:Math.max(0,Math.min(1000,v.score|0)),title:String(v.title||"").slice(0,40)});
+        });
+        renderBoard(r,true);
+      },err=>renderBoard([],false));
+  }else{
+    renderBoard([],false);
+  }
+}
+function esc(s){const d=document.createElement("div");d.textContent=String(s);return d.innerHTML;}
+
+/* ================= share ================= */
+$("btnShare").addEventListener("click",async()=>{
+  const total=state.scores.reduce((a,b)=>a+b,0);
+  const[title]=rankOf(total);
+  const labels=["ساعة الدقة","رتّب يومك","اتبع النظام","التركيز"];
+  const bars=state.scores.map((s,i)=>{
+    const f=Math.round(s/250*5);
+    return labels[i]+"  "+"▰".repeat(f)+"▱".repeat(5-f);
+  }).join("\n");
+  const txt=`رحلة الانضباط — قيم نعيشها\n${state.name} | ${title}\nالنتيجة: ${total} / 1000\n${bars}\nهل تستطيع تجاوزي؟\n#قيم_نعيشها #الانضباط`;
+  try{await navigator.clipboard.writeText(txt);toast("نُسخت النتيجة — شاركها في مجموعة الفريق");}
+  catch(e){toast("تعذّر النسخ تلقائيًا");}
+});
+
+/* ================= wiring ================= */
+function hasPlayed(){try{return localStorage.getItem("disc_played")==="1";}catch(e){return false;}}
+function showStoredResult(){
+  try{
+    const r=JSON.parse(localStorage.getItem("disc_result")||"null");
+    if(r&&r.scores){state.name=r.name||state.name;state.scores=r.scores;showResults(true);return true;}
+  }catch(e){}
+  return false;
+}
+$("btnStart").addEventListener("click",()=>{
+  if(hasPlayed()){
+    toast("لكل جهاز محاولة واحدة فقط");
+    if(!showStoredResult())openBoard();
+    return;
+  }
+  const n=$("playerName").value.trim();
+  if(!n){toast("اكتب اسمك أولًا لتدخل المنافسة");$("playerName").focus();return;}
+  state.name=n;
+  try{localStorage.setItem("disc_name",n);localStorage.setItem("disc_played","1");}catch(e){}
+  state.stage=0;state.scores=[0,0,0,0];
+  g1Start();
+});
+$("btnLeaderHome").addEventListener("click",openBoard);
+$("btnBoard").addEventListener("click",openBoard);
+$("btnPlayFromLb").addEventListener("click",()=>{
+  if(hasPlayed()){toast("لكل جهاز محاولة واحدة فقط");if(!showStoredResult())show("scr-home");return;}
+  show("scr-home");
+});
+$("btnHomeFromLb").addEventListener("click",()=>show("scr-home"));
+if(state.name)$("playerName").value=state.name;
+if(hasPlayed()){$("btnStart").textContent="عرض نتيجتي";$("playerName").disabled=true;}
+</script>
+</body>
+</html>
