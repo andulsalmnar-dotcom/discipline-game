@@ -526,6 +526,14 @@ function beep(freq,dur=0.12,vol=0.15){
 
 /* ================= state ================= */
 const state={name:"",scores:[0,0,0,0],stage:0};
+/* تنظيف النسخ القديمة المحفوظة في المتصفحات — غيّر الرقم لإعادة التنظيف */
+const CACHE_VERSION="2";
+try{
+  if(localStorage.getItem("disc_cache_ver")!==CACHE_VERSION){
+    localStorage.removeItem("disc_board");
+    localStorage.setItem("disc_cache_ver",CACHE_VERSION);
+  }
+}catch(e){}
 try{const n=localStorage.getItem("disc_name");if(n)state.name=n;}catch(e){}
 
 /* ================= Firebase (shared live scores) ================= */
@@ -860,7 +868,7 @@ const DEMO_ROWS=[["سارة العتيبي",912],["محمد القحطاني",87
 function renderBoard(cloudRows,live){
   const list=$("lbList"),note=$("lbNote"),pod=$("podium"),stats=$("hofStats");
   let rows=DEMO?[...DEMO_ROWS]:[...OFFICIAL,...cloudRows];
-  if(!DEMO)localBoard().forEach(r=>rows.push(r));
+  if(!DEMO&&!live)localBoard().forEach(r=>rows.push(r));
   const best={};
   rows.forEach(r=>{if(r&&r.name&&(!best[r.name]||r.score>best[r.name].score))best[r.name]=r;});
   rows=Object.values(best).sort((a,b)=>b.score-a.score);
