@@ -66,6 +66,7 @@ body{
   background:transparent;border:1.5px solid var(--navy-line);color:var(--mist);
   transition:border-color .15s,color .15s;
 }
+[hidden]{display:none!important}
 .ghost:active{border-color:var(--gold-dim);color:var(--gold-soft)}
 .stack{display:flex;flex-direction:column;gap:12px}
 .spacer{flex:1}
@@ -306,7 +307,7 @@ body::before{content:"";position:fixed;inset:0;background-image:radial-gradient(
     <div class="brand">
       <div class="prog">برنامج «قيم نعيشها» — أسبوع الانضباط</div>
       <h1>رحلة <span>الانضباط</span></h1>
-      <div class="sub">أربعة تحديات في ثلاث دقائق — ومحاولة واحدة فقط، فاجعلها مثالية</div>
+      <div class="sub">أربعة تحديات في ثلاث دقائق — ولك محاولتان فقط، وتُحتسب أفضلهما</div>
     </div>
 
     <div class="dial-wrap" aria-hidden="true">
@@ -445,6 +446,7 @@ body::before{content:"";position:fixed;inset:0;background-image:radial-gradient(
     <div class="spacer"></div>
     <div class="stack">
       <button class="btn" id="btnBoard">لوحة الشرف</button>
+      <button class="ghost" id="btnRetry" hidden>ابدأ محاولتك الثانية</button>
       <button class="ghost" id="btnShare">نسخ نتيجتي لمشاركتها</button>
     </div>
   </section>
@@ -805,9 +807,14 @@ async function showResults(skipSave){
     });
   },150);
   if(!skipSave){
-    try{localStorage.setItem("disc_result",JSON.stringify({name:state.name,scores:state.scores}));}catch(e){}
+    try{
+      const prev=JSON.parse(localStorage.getItem("disc_result")||"null");
+      const prevTotal=prev&&prev.scores?prev.scores.reduce((a,b)=>a+b,0):-1;
+      if(total>prevTotal)localStorage.setItem("disc_result",JSON.stringify({name:state.name,scores:state.scores}));
+    }catch(e){}
     saveScore(total,title);
   }
+  updateRetry();
 }
 
 /* ================= score saving ================= */
@@ -956,7 +963,18 @@ $("btnShare").addEventListener("click",async()=>{
 });
 
 /* ================= wiring ================= */
-function hasPlayed(){try{return localStorage.getItem("disc_played")==="1";}catch(e){return false;}}
+const MAX_PLAYS=2;
+function plays(){
+  try{
+    const v=parseInt(localStorage.getItem("disc_plays")||"0",10)||0;
+    return Math.max(v,localStorage.getItem("disc_played")==="1"?1:0);
+  }catch(e){return 0;}
+}
+function hasPlayed(){return plays()>=MAX_PLAYS;}
+function updateRetry(){
+  const left=MAX_PLAYS-plays();
+  $("btnRetry").hidden=left<=0;
+}
 function showStoredResult(){
   try{
     const r=JSON.parse(localStorage.getItem("disc_result")||"null");
@@ -964,28 +982,44 @@ function showStoredResult(){
   }catch(e){}
   return false;
 }
+function startAttempt(){
+  const n=(state.name&&plays()>0)?state.name:$("playerName").value.trim();
+  if(!n){toast("اكتب اسمك أولًا لتدخل المنافسة");$("playerName").focus();return;}
+  state.name=n;
+  const used=plays()+1;
+  try{localStorage.setItem("disc_name",n);localStorage.setItem("disc_plays",String(used));}catch(e){}
+  if(used===MAX_PLAYS)toast("هذه محاولتك الأخيرة — تُحتسب أفضل نتيجة لك");
+  state.stage=0;state.scores=[0,0,0,0];
+  g1Start();
+}
+function refreshHome(){
+  const p=plays();
+  if(p>=MAX_PLAYS){$("btnStart").textContent="عرض أفضل نتيجة لي";}
+  else if(p===1){$("btnStart").textContent="ابدأ محاولتك الثانية";}
+  else{$("btnStart").textContent="ابدأ الرحلة";}
+  if(p>0){$("playerName").value=state.name;$("playerName").disabled=true;}
+}
 $("btnStart").addEventListener("click",()=>{
   if(hasPlayed()){
-    toast("لكل شخص محاولة واحدة فقط");
+    toast("لكل شخص محاولتان فقط");
     if(!showStoredResult())openBoard();
     return;
   }
-  const n=$("playerName").value.trim();
-  if(!n){toast("اكتب اسمك أولًا لتدخل المنافسة");$("playerName").focus();return;}
-  state.name=n;
-  try{localStorage.setItem("disc_name",n);localStorage.setItem("disc_played","1");}catch(e){}
-  state.stage=0;state.scores=[0,0,0,0];
-  g1Start();
+  startAttempt();
+});
+$("btnRetry").addEventListener("click",()=>{
+  if(hasPlayed()){toast("لكل شخص محاولتان فقط");updateRetry();return;}
+  startAttempt();
 });
 $("btnLeaderHome").addEventListener("click",openBoard);
 $("btnBoard").addEventListener("click",openBoard);
 $("btnPlayFromLb").addEventListener("click",()=>{
-  if(hasPlayed()){toast("لكل شخص محاولة واحدة فقط");if(!showStoredResult())show("scr-home");return;}
-  show("scr-home");
+  if(hasPlayed()){toast("لكل شخص محاولتان فقط");if(!showStoredResult())show("scr-home");return;}
+  refreshHome();show("scr-home");
 });
-$("btnHomeFromLb").addEventListener("click",()=>show("scr-home"));
+$("btnHomeFromLb").addEventListener("click",()=>{refreshHome();show("scr-home");});
 if(state.name)$("playerName").value=state.name;
-if(hasPlayed()){$("btnStart").textContent="عرض نتيجتي";$("playerName").disabled=true;}
+refreshHome();
 </script>
 </body>
 </html>
